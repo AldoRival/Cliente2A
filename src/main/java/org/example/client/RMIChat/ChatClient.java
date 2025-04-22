@@ -2,6 +2,7 @@ package org.example.client.RMIChat;
 
 import org.example.server.RMIChat.ChatRemote;
 
+import java.net.InetAddress;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -12,9 +13,17 @@ public class ChatClient extends UnicastRemoteObject implements ChatRemote {
     private ChatRemote clientCallback;
 
     public ChatClient(String username, ChatRemote clientCallback, String serverIP) throws RemoteException {
-        this.username = username;
-        this.clientCallback = clientCallback;
+        super();
         try {
+            // IMPORTANTE: Establecer la propiedad antes de llamar a super()
+            System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostAddress());
+
+            // Luego llamar a super() para que UnicastRemoteObject use la propiedad correcta
+
+
+            this.username = username;
+            this.clientCallback = clientCallback;
+            
             // Buscar y conectar al servidor RMI utilizando la IP del servidor
             chatServer = (ChatRemote) Naming.lookup("rmi://" + serverIP + ":1099/ChatServer");
             chatServer.registerUser(username);
@@ -22,6 +31,7 @@ public class ChatClient extends UnicastRemoteObject implements ChatRemote {
             System.out.println("Cliente conectado al servidor en " + serverIP);
         } catch (Exception e) {
             System.err.println("Error al conectar al servidor: " + e.getMessage());
+            throw new RemoteException("Error de conexión", e);
         }
     }
 
